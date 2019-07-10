@@ -1,1 +1,4 @@
+Dockerfile
+docker-compose.yml
 __pycache__
+*.pyc
