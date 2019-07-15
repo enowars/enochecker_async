@@ -14,4 +14,4 @@ steps:
 - task: TwineAuthenticate@0
   inputs:
     externalFeeds: 'pypi_enochecker_async'
-- script: python3 setup.py install
+- script: python3 setup.py install --user
