@@ -10,6 +10,6 @@ pool:
   vmImage: 'ubuntu-latest'
 
 steps:
-- script: 'pip install twine'
+- script: 'pip3 install twine'
 - task: TwineAuthenticate@0
 - script: 'python3 -m twine upload -r {feedName/EndpointName} --config-file $(PYPIRC_PATH) {.}'
