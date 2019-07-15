@@ -11,3 +11,7 @@ pool:
 
 steps:
 - script: 'pip install twine'
+- task: TwineAuthenticate@0
+  inputs:
+    externalFeeds: 'https://test.pypi.org/legacy/'
+- script: 'twine upload -r {feedName/EndpointName} --config-file $(PYPIRC_PATH) {.}'
