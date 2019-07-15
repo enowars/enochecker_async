@@ -1,5 +1,7 @@
 trigger:
-- refs/tags/*
+  tags:
+    include:
+      - .*
 
 pool:
   vmImage: 'ubuntu-latest'
