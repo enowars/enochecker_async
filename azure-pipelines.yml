@@ -12,4 +12,4 @@ pool:
 steps:
 - script: 'pip install twine'
 - task: TwineAuthenticate@0
-- script: 'twine upload -r {feedName/EndpointName} --config-file $(PYPIRC_PATH) {.}'
+- script: 'python3 -m twine upload -r {feedName/EndpointName} --config-file $(PYPIRC_PATH) {.}'
