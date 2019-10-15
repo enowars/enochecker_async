@@ -20,6 +20,7 @@ class BaseChecker():
 
 class ELKFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
+        record.msg = record.msg % record.args
         return LOGGING_PREFIX + jsons.dumps(self.create_message(record))
 
     def create_message(self, record: logging.LogRecord):
