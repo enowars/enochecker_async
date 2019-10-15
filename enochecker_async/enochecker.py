@@ -10,6 +10,8 @@ from motor import MotorCollection, MotorClient
 from .util import CheckerTaskResult, CheckerTaskType, CheckerTaskMessage, CheckerResultMessage, EnoLogMessage
 from .util import OfflineException, BrokenServiceException
 
+LOGGING_PREFIX = "##ENOLOGMESSAGE "
+
 class BaseChecker():
     def __init__(self, service_name: str, checker_port: int) -> None:
         self.service_name = service_name
@@ -18,7 +20,7 @@ class BaseChecker():
 
 class ELKFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
-        return jsons.dumps(self.create_message(record))
+        return LOGGING_PREFIX + jsons.dumps(self.create_message(record))
 
     def create_message(self, record: logging.LogRecord):
         return EnoLogMessage(record.checker.name if hasattr(record, "checker") else None,
