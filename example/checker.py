@@ -12,7 +12,7 @@ class TestChecker(BaseChecker):
     port = 9012
 
     def __init__(self):
-        super(TestChecker, self).__init__("TestService", 8080)
+        super(TestChecker, self).__init__("TestService", 8080, 1, 1, 1)
 
     async def test(self, logger: LoggerAdapter, collection: MotorCollection):
         document = { 'key': 'value'}

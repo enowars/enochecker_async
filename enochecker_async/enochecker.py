@@ -7,16 +7,20 @@ import tornado.web
 
 from typing import Optional, Callable, Any, Dict, List, Union, Type
 from motor import MotorCollection, MotorClient
-from .util import CheckerTaskResult, CheckerTaskType, CheckerTaskMessage, CheckerResultMessage, EnoLogMessage
-from .util import OfflineException, BrokenServiceException
+from enochecker_core import CheckerTaskResult, CheckerTaskType, CheckerTaskMessage, CheckerResultMessage, EnoLogMessage
+from enochecker_core import OfflineException, BrokenServiceException
+from enochecker_core import CheckerInfoMessage
 
 LOGGING_PREFIX = "##ENOLOGMESSAGE "
 
 class BaseChecker():
-    def __init__(self, service_name: str, checker_port: int) -> None:
+    def __init__(self, service_name: str, checker_port: int, flags_per_round: int, noises_per_round: int, havocs_per_round: int) -> None:
         self.service_name = service_name
         self.name = service_name + "Checker"
         self.checker_port = checker_port
+        self.flags_per_round = flags_per_round
+        self.noises_per_round = noises_per_round
+        self.havocs_per_round = havocs_per_round
 
 class ELKFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
@@ -41,7 +45,9 @@ class ELKFormatter(logging.Formatter):
 class EnoCheckerRequestHandler(tornado.web.RequestHandler):
     async def get(self):
         logging.info('GET /')
-        self.write('<h1>Welcome to {}Checker</h1>'.format(self.checker.service_name))
+        checker = self.settings['checker']
+        self.write(jsons.dumps(CheckerInfoMessage(checker.service_name, checker.flags_per_round,
+            checker.noises_per_round, checker.havocs_per_round)))
     
     async def post(self):
         checker = self.settings['checker']
@@ -90,7 +96,8 @@ def create_app(checker: BaseChecker, mongo_url: str = "mongodb://mongodb:27017")
     logger = logging.getLogger(__name__)
     mongo = MotorClient(mongo_url)[checker.name]
     app = tornado.web.Application([
-        (r"/", EnoCheckerRequestHandler)
+        (r"/", EnoCheckerRequestHandler),
+        (r"/service", EnoCheckerRequestHandler)
     ], logger=logger, checker=checker, mongo=mongo)
     app.listen(checker.checker_port)
     tornado.ioloop.IOLoop.current().start()
