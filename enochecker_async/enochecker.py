@@ -79,7 +79,7 @@ class EnoCheckerRequestHandler(tornado.web.RequestHandler):
         except OfflineException as ex:
             stacktrace = ''.join(traceback.format_exception(None, ex, ex.__traceback__))
             scoped_logger.warn("Task finished DOWN: {}".format(stacktrace))
-            self.write( jsons.dumps(CheckerResultMessage(CheckerTaskResult.CHECKER_TASK_RESULT_DOWN.value)))
+            self.write(jsons.dumps(CheckerResultMessage(CheckerTaskResult.CHECKER_TASK_RESULT_DOWN.value)))
             return
         except BrokenServiceException as ex:
             stacktrace = ''.join(traceback.format_exception(None, ex, ex.__traceback__))
