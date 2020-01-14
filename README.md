@@ -1,2 +1,1 @@
-# EnoChecker Async
-![](https://tokei.rs/b1/github/enowars/enochecker_async)
+# EnoChecker Async [![Build Status](https://dev.azure.com/ENOFLAG/ENOWARS/_apis/build/status/enochecker_async%20CI?branchName=master)](https://dev.azure.com/ENOFLAG/ENOWARS/_build) ![](https://tokei.rs/b1/github/enowars/enochecker_async)
