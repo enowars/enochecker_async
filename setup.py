@@ -8,14 +8,13 @@ with open("requirements.txt", "r") as f:
 
 setuptools.setup(
     name="enochecker_async",
-    version="0.3.1",
+    version="0.3.2",
     author="Trolldemorted",
     author_email="benediktradtke@gmail.com",
     description="Library to build async checker scripts for the EnoEngine A/D CTF Framework in Python",
     long_description=long_description,
     url="https://github.com/enowars/enochecker_async",
     packages=setuptools.find_packages(),
-    install_requires=requirements,
     classifiers=[
         # How mature is this project? Common values are
         #   3 - Alpha
