@@ -14,7 +14,7 @@ from enochecker_core import CheckerInfoMessage
 LOGGING_PREFIX = "##ENOLOGMESSAGE "
 
 class BaseChecker():
-    BaseChecker = "BaseChecker"
+    name = "BaseChecker"
     def __init__(self, service_name: str, checker_port: int, flags_per_round: int, noises_per_round: int, havocs_per_round: int) -> None:
         self.service_name = service_name
         self.name = service_name + "Checker"
