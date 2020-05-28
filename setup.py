@@ -13,6 +13,7 @@ setuptools.setup(
     author_email="benediktradtke@gmail.com",
     description="Library to build async checker scripts for the EnoEngine A/D CTF Framework in Python",
     long_description=long_description,
+    long_description_content_type="text/markdown",
     url="https://github.com/enowars/enochecker_async",
     packages=setuptools.find_packages(),
     classifiers=[
