@@ -16,6 +16,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/enowars/enochecker_async",
     packages=setuptools.find_packages(),
+    install_requires=requirements,
     classifiers=[
         # How mature is this project? Common values are
         #   3 - Alpha
