@@ -42,7 +42,8 @@ class ELKFormatter(logging.Formatter):
             record.checker_task.teamId if hasattr(record, "checker_task") else None,
             record.checker_task.team if hasattr(record, "checker_task") else None,
             record.checker_task.serviceId if hasattr(record, "checker_task") else None,
-            record.checker.service_name if hasattr(record, "checker") else None)
+            record.checker.service_name if hasattr(record, "checker") else None,
+            record.checker_task.method if hasattr(record, "checker_task") else None)
 
 class EnoCheckerRequestHandler(tornado.web.RequestHandler):
     async def get(self):
