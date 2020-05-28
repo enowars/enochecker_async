@@ -8,7 +8,7 @@ with open("requirements.txt", "r") as f:
 
 setuptools.setup(
     name="enochecker_async",
-    version="0.3.2",
+    version="0.3.3",
     author="Trolldemorted",
     author_email="benediktradtke@gmail.com",
     description="Library to build async checker scripts for the EnoEngine A/D CTF Framework in Python",
