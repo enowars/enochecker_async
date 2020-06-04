@@ -1,4 +1,4 @@
-enochecker_core>=0.3
+enochecker_core>=0.4
 tornado>=6.0
 motor>=2.1
 jsons>=1.1
