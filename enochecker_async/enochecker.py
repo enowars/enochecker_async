@@ -27,23 +27,33 @@ class BaseChecker():
 class ELKFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
         record.msg = record.msg % record.args
-        return LOGGING_PREFIX + jsons.dumps(self.create_message(record))
+        return LOGGING_PREFIX + jsons.dumps(self.create_message(record), key_transformer=jsons.KEY_TRANSFORMER_CAMELCASE)
+
+    def to_level(self, levelname: str) -> int:
+        if levelname=="CRITICAL": return 4
+        if levelname=="ERROR": return 3
+        if levelname=="WARNING": return 2
+        if levelname=="INFO": return 1
+        if levelname=="DEBUG": return 0
+        return 0
 
     def create_message(self, record: logging.LogRecord):
         return EnoLogMessage(BaseChecker.name,
             "infrastructure",
             record.levelname,
+            self.to_level(record.levelname),
             datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-            record.checker.name if hasattr(record, "checker") else None,
+            record.module,
             record.funcName,
             record.checker_task.flag if hasattr(record, "checker_task") else None,
-            record.checker_task.flagIndex if hasattr(record, "checker_task") else None,
-            record.checker_task.runId if hasattr(record, "checker_task") else None,
-            record.checker_task.round if hasattr(record, "checker_task") else None,
+            record.checker_task.flag_index if hasattr(record, "checker_task") else None,
+            record.checker_task.run_id if hasattr(record, "checker_task") else None,
+            record.checker_task.round_id if hasattr(record, "checker_task") else None,
+            record.checker_task.related_round_id if hasattr(record, "checker_task") else None,
             record.msg,
-            record.checker_task.teamId if hasattr(record, "checker_task") else None,
-            record.checker_task.team if hasattr(record, "checker_task") else None,
-            record.checker_task.serviceId if hasattr(record, "checker_task") else None,
+            record.checker_task.team_name if hasattr(record, "checker_task") else None,
+            record.checker_task.team_id if hasattr(record, "checker_task") else None,
+            #record.checker_task.serviceId if hasattr(record, "checker_task") else None,  #Missing in EniLogMessage, TODO: maybe add everywhere
             record.checker.service_name if hasattr(record, "checker") else None,
             record.checker_task.method if hasattr(record, "checker_task") else None)
 
@@ -59,7 +69,7 @@ class EnoCheckerRequestHandler(tornado.web.RequestHandler):
         scoped_logger = self.settings['logger']
         try:
             collection: MotorCollection = self.settings['mongo']['checker_storage']
-            checker_task = jsons.loads(self.request.body, CheckerTaskMessage)
+            checker_task = jsons.loads(self.request.body, CheckerTaskMessage, key_transformer=jsons.KEY_TRANSFORMER_SNAKECASE)
 
             # create LoggerAdapter
             extra = { 'checker_task': checker_task, 'checker': checker }
