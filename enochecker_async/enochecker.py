@@ -74,7 +74,7 @@ class EnoCheckerRequestHandler(tornado.web.RequestHandler):
             # create LoggerAdapter
             extra = { 'checker_task': checker_task, 'checker': checker }
             scoped_logger = logging.LoggerAdapter(scoped_logger, extra=extra)
-            scoped_logger.info("Received task (id={}, teamid={}, method={}, index={})".format(checker_task.runId, checker_task.teamId, checker_task.method, checker_task.flagIndex))
+            scoped_logger.info("Received task (id={}, teamid={}, method={}, index={})".format(checker_task.run_id, checker_task.team_id, checker_task.method, checker_task.flag_index))
 
             # call method
             if checker_task.method == CheckerTaskType.CHECKER_TASK_TYPE_PUTFLAG.value:
@@ -89,7 +89,7 @@ class EnoCheckerRequestHandler(tornado.web.RequestHandler):
                 await checker.havoc(scoped_logger, checker_task, collection)
             else:
                 raise Exception("Unknown rpc method {}".format(checker_task.method))
-            scoped_logger.info("Task finished OK (id={}, teamid={}, method={}, index={})".format(checker_task.runId, checker_task.teamId, checker_task.method, checker_task.flagIndex))
+            scoped_logger.info("Task finished OK (id={}, teamid={}, method={}, index={})".format(checker_task.run_id, checker_task.team_id, checker_task.method, checker_task.flag_index))
             self.write(jsons.dumps(CheckerResultMessage(CheckerTaskResult.CHECKER_TASK_RESULT_OK.value)))
         except OfflineException as ex:
             stacktrace = ''.join(traceback.format_exception(None, ex, ex.__traceback__))
