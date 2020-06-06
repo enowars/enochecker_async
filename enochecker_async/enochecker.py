@@ -24,7 +24,9 @@ LOGGING_PREFIX = "##ENOLOGMESSAGE "
 class BaseChecker:
     name = "BaseChecker"
 
-    def __init__(self, service_name: str, checker_port: int, flags_per_round: int, noises_per_round: int, havocs_per_round: int) -> None:
+    def __init__(
+        self, service_name: str, checker_port: int, flags_per_round: int, noises_per_round: int, havocs_per_round: int
+    ) -> None:
         self.service_name = service_name
         self.name = service_name + "Checker"
         self.checker_port = checker_port
@@ -37,7 +39,9 @@ class BaseChecker:
 class ELKFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
         record.msg = record.msg % record.args
-        return LOGGING_PREFIX + jsons.dumps(self.create_message(record), key_transformer=jsons.KEY_TRANSFORMER_CAMELCASE)
+        return LOGGING_PREFIX + jsons.dumps(
+            self.create_message(record), key_transformer=jsons.KEY_TRANSFORMER_CAMELCASE
+        )
 
     def to_level(self, levelname: str) -> int:
         if levelname == "CRITICAL":
@@ -81,14 +85,22 @@ class EnoCheckerRequestHandler(tornado.web.RequestHandler):
     async def get(self):
         logging.info("GET /")
         checker = self.settings["checker"]
-        self.write(jsons.dumps(CheckerInfoMessage(checker.service_name, checker.flags_per_round, checker.noises_per_round, checker.havocs_per_round)))
+        self.write(
+            jsons.dumps(
+                CheckerInfoMessage(
+                    checker.service_name, checker.flags_per_round, checker.noises_per_round, checker.havocs_per_round
+                )
+            )
+        )
 
     async def post(self):
         checker = self.settings["checker"]
         scoped_logger = self.settings["logger"]
         try:
             collection: MotorCollection = self.settings["mongo"]["checker_storage"]
-            checker_task = jsons.loads(self.request.body, CheckerTaskMessage, key_transformer=jsons.KEY_TRANSFORMER_SNAKECASE)
+            checker_task = jsons.loads(
+                self.request.body, CheckerTaskMessage, key_transformer=jsons.KEY_TRANSFORMER_SNAKECASE
+            )
 
             # create LoggerAdapter
             extra = {"checker_task": checker_task, "checker": checker}
@@ -138,6 +150,11 @@ class EnoCheckerRequestHandler(tornado.web.RequestHandler):
 def create_app(checker: BaseChecker, mongo_url: str = "mongodb://mongodb:27017") -> None:
     logger = logging.getLogger(__name__)
     mongo = MotorClient(mongo_url)[checker.name]
-    app = tornado.web.Application([(r"/", EnoCheckerRequestHandler), (r"/service", EnoCheckerRequestHandler)], logger=logger, checker=checker, mongo=mongo)
+    app = tornado.web.Application(
+        [(r"/", EnoCheckerRequestHandler), (r"/service", EnoCheckerRequestHandler)],
+        logger=logger,
+        checker=checker,
+        mongo=mongo,
+    )
     app.listen(checker.checker_port)
     tornado.ioloop.IOLoop.current().start()
