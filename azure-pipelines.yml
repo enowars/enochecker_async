@@ -33,3 +33,10 @@ steps:
   inputs:
     externalFeeds: 'pypi_enochecker_async'
 - script: python3 setup.py install --user
+
+- script: |
+    mkdir /tmp/test_sdist
+    python setup.py sdist -d /tmp/test_sdist
+    cd /tmp/test_sdist
+    pip install enochecker_async-*.tar.gz
+  displayName: 'test sdist'
