@@ -132,19 +132,16 @@ class EnoCheckerRequestHandler(tornado.web.RequestHandler):
             self.write(jsons.dumps(CheckerResultMessage(CheckerTaskResult.CHECKER_TASK_RESULT_OK.value)))
         except OfflineException as ex:
             stacktrace = "".join(traceback.format_exception(None, ex, ex.__traceback__))
-            scoped_logger.warn("Task finished DOWN: {}".format(stacktrace))
+            scoped_logger.warn(f"Task finished DOWN: {stacktrace}".replace("%","%%"))
             self.write(jsons.dumps(CheckerResultMessage(CheckerTaskResult.CHECKER_TASK_RESULT_DOWN.value)))
-            return
         except BrokenServiceException as ex:
             stacktrace = "".join(traceback.format_exception(None, ex, ex.__traceback__))
-            scoped_logger.warn("Task finished MUMBLE: {}".format(stacktrace))
+            scoped_logger.warn(f"Task finished MUMBLE: {stacktrace}".replace("%","%%"))
             self.write(jsons.dumps(CheckerResultMessage(CheckerTaskResult.CHECKER_TASK_RESULT_MUMBLE.value)))
-            return
         except Exception as ex:
             stacktrace = "".join(traceback.format_exception(None, ex, ex.__traceback__))
-            scoped_logger.error("Task finished INTERNAL_ERROR: {}".format(stacktrace))
+            scoped_logger.error(f"Task finished INTERNAL_ERROR: {stacktrace}".replace("%","%%"))
             self.write(jsons.dumps(CheckerResultMessage(CheckerTaskResult.CHECKER_TASK_RESULT_INTERNAL_ERROR.value)))
-            return
 
 
 def create_app(checker: BaseChecker, mongo_url: str = "mongodb://mongodb:27017") -> None:
