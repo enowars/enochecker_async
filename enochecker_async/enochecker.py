@@ -38,7 +38,9 @@ class BaseChecker:
 
 class ELKFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
-        record.msg = record.msg % record.args
+        if record.args is not None:
+            record.msg = record.msg % record.args
+        
         return LOGGING_PREFIX + jsons.dumps(
             self.create_message(record), key_transformer=jsons.KEY_TRANSFORMER_CAMELCASE
         )
