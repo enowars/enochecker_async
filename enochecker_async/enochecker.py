@@ -91,7 +91,8 @@ class EnoCheckerRequestHandler(tornado.web.RequestHandler):
             jsons.dumps(
                 CheckerInfoMessage(
                     checker.service_name, checker.flags_per_round, checker.noises_per_round, checker.havocs_per_round
-                )
+                ),
+                key_transformer=jsons.KEY_TRANSFORMER_CAMELCASE,
             )
         )
 
