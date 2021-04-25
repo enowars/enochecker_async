@@ -143,21 +143,23 @@ class EnoCheckerRequestHandler(tornado.web.RequestHandler):
                 )
             )
         except OfflineException as ex:
+            ex_str = str(ex)
             stacktrace = "".join(traceback.format_exception(None, ex, ex.__traceback__))
             scoped_logger.warn(f"Task finished DOWN: {stacktrace}".replace("%", "%%"))
             self.write(
                 jsons.dumps(
-                    CheckerResultMessage(result=CheckerTaskResult.DOWN),
+                    CheckerResultMessage(result=CheckerTaskResult.DOWN, message=ex_str if ex_str else None),
                     use_enum_name=False,
                     key_transformer=jsons.KEY_TRANSFORMER_CAMELCASE,
                 )
             )
         except BrokenServiceException as ex:
+            ex_str = str(ex)
             stacktrace = "".join(traceback.format_exception(None, ex, ex.__traceback__))
             scoped_logger.warn(f"Task finished MUMBLE: {stacktrace}".replace("%", "%%"))
             self.write(
                 jsons.dumps(
-                    CheckerResultMessage(result=CheckerTaskResult.MUMBLE),
+                    CheckerResultMessage(result=CheckerTaskResult.MUMBLE, message=ex_str if ex_str else None),
                     use_enum_name=False,
                     key_transformer=jsons.KEY_TRANSFORMER_CAMELCASE,
                 )
