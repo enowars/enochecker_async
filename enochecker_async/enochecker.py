@@ -9,10 +9,10 @@ import tornado.web
 from enochecker_core import (
     BrokenServiceException,
     CheckerInfoMessage,
+    CheckerMethod,
     CheckerResultMessage,
     CheckerTaskMessage,
     CheckerTaskResult,
-    CheckerTaskType,
     EnoLogMessage,
     OfflineException,
 )
@@ -62,24 +62,24 @@ class ELKFormatter(logging.Formatter):
         checker_task: Optional[CheckerTaskMessage] = getattr(record, "checker_task", None)
         checker: Optional[BaseChecker] = getattr(record, "checker", None)
         return EnoLogMessage(
-            BaseChecker.name,
-            "infrastructure",
-            record.levelname,
-            self.to_level(record.levelname),
-            datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-            record.module,
-            record.funcName,
-            checker_task.flag if checker_task else None,
-            checker_task.flag_index if checker_task else None,
-            checker_task.run_id if checker_task else None,
-            checker_task.round_id if checker_task else None,
-            checker_task.related_round_id if checker_task else None,
-            record.msg,
-            checker_task.team_name if checker_task else None,
-            checker_task.team_id if checker_task else None,
-            # record.checker_task.serviceId if hasattr(record, "checker_task") else None,  #Missing in EniLogMessage, TODO: maybe add everywhere
-            checker.service_name if checker else None,
-            checker_task.method if checker_task else None,
+            tool=BaseChecker.name,
+            type="infrastructure",
+            severity=record.levelname,
+            severity_level=self.to_level(record.levelname),
+            timestamp=datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+            message=record.msg,
+            module=record.module,
+            function=record.funcName,
+            service_name=checker.service_name if checker else None,
+            task_id=checker_task.task_id if checker_task else None,
+            method=checker_task.method.value if checker_task else None,
+            team_id=checker_task.team_id if checker_task else None,
+            team_name=checker_task.team_name if checker_task else None,
+            current_round_id=checker_task.current_round_id if checker_task else None,
+            related_round_id=checker_task.related_round_id if checker_task else None,
+            flag=checker_task.flag if checker_task else None,
+            variant_id=checker_task.variant_id if checker_task else None,
+            task_chain_id=checker_task.task_chain_id if checker_task else None,
         )
 
 
@@ -90,7 +90,10 @@ class EnoCheckerRequestHandler(tornado.web.RequestHandler):
         self.write(
             jsons.dumps(
                 CheckerInfoMessage(
-                    checker.service_name, checker.flags_per_round, checker.noises_per_round, checker.havocs_per_round
+                    service_name=checker.service_name,
+                    flag_variants=checker.flags_per_round,
+                    noise_variants=checker.noises_per_round,
+                    havoc_variants=checker.havocs_per_round,
                 ),
                 key_transformer=jsons.KEY_TRANSFORMER_CAMELCASE,
             )
@@ -102,7 +105,7 @@ class EnoCheckerRequestHandler(tornado.web.RequestHandler):
         try:
             collection: MotorCollection = self.settings["mongo"]["checker_storage"]
             checker_task = jsons.loads(
-                self.request.body, CheckerTaskMessage, key_transformer=jsons.KEY_TRANSFORMER_SNAKECASE
+                self.request.body, CheckerTaskMessage, key_transformer=jsons.KEY_TRANSFORMER_SNAKECASE, strict=True
             )
 
             # create LoggerAdapter
@@ -115,15 +118,15 @@ class EnoCheckerRequestHandler(tornado.web.RequestHandler):
             )
 
             # call method
-            if checker_task.method == CheckerTaskType.CHECKER_TASK_TYPE_PUTFLAG.value:
+            if checker_task.method == CheckerMethod.PUTFLAG:
                 await checker.putflag(scoped_logger, checker_task, collection)
-            elif checker_task.method == CheckerTaskType.CHECKER_TASK_TYPE_GETFLAG.value:
+            elif checker_task.method == CheckerMethod.GETFLAG:
                 await checker.getflag(scoped_logger, checker_task, collection)
-            elif checker_task.method == CheckerTaskType.CHECKER_TASK_TYPE_PUTNOISE.value:
+            elif checker_task.method == CheckerMethod.PUTNOISE:
                 await checker.putnoise(scoped_logger, checker_task, collection)
-            elif checker_task.method == CheckerTaskType.CHECKER_TASK_TYPE_GETNOISE.value:
+            elif checker_task.method == CheckerMethod.GETNOISE:
                 await checker.getnoise(scoped_logger, checker_task, collection)
-            elif checker_task.method == CheckerTaskType.CHECKER_TASK_TYPE_HAVOC.value:
+            elif checker_task.method == CheckerMethod.HAVOC:
                 await checker.havoc(scoped_logger, checker_task, collection)
             else:
                 raise Exception("Unknown rpc method {}".format(checker_task.method))
@@ -132,19 +135,43 @@ class EnoCheckerRequestHandler(tornado.web.RequestHandler):
                     checker_task.run_id, checker_task.team_id, checker_task.method, checker_task.flag_index
                 )
             )
-            self.write(jsons.dumps(CheckerResultMessage(CheckerTaskResult.CHECKER_TASK_RESULT_OK.value)))
+            self.write(
+                jsons.dumps(
+                    CheckerResultMessage(result=CheckerTaskResult.OK),
+                    use_enum_name=False,
+                    key_transformer=jsons.KEY_TRANSFORMER_CAMELCASE,
+                )
+            )
         except OfflineException as ex:
             stacktrace = "".join(traceback.format_exception(None, ex, ex.__traceback__))
             scoped_logger.warn(f"Task finished DOWN: {stacktrace}".replace("%", "%%"))
-            self.write(jsons.dumps(CheckerResultMessage(CheckerTaskResult.CHECKER_TASK_RESULT_DOWN.value)))
+            self.write(
+                jsons.dumps(
+                    CheckerResultMessage(result=CheckerTaskResult.DOWN),
+                    use_enum_name=False,
+                    key_transformer=jsons.KEY_TRANSFORMER_CAMELCASE,
+                )
+            )
         except BrokenServiceException as ex:
             stacktrace = "".join(traceback.format_exception(None, ex, ex.__traceback__))
             scoped_logger.warn(f"Task finished MUMBLE: {stacktrace}".replace("%", "%%"))
-            self.write(jsons.dumps(CheckerResultMessage(CheckerTaskResult.CHECKER_TASK_RESULT_MUMBLE.value)))
+            self.write(
+                jsons.dumps(
+                    CheckerResultMessage(result=CheckerTaskResult.MUMBLE),
+                    use_enum_name=False,
+                    key_transformer=jsons.KEY_TRANSFORMER_CAMELCASE,
+                )
+            )
         except Exception as ex:
             stacktrace = "".join(traceback.format_exception(None, ex, ex.__traceback__))
             scoped_logger.error(f"Task finished INTERNAL_ERROR: {stacktrace}".replace("%", "%%"))
-            self.write(jsons.dumps(CheckerResultMessage(CheckerTaskResult.CHECKER_TASK_RESULT_INTERNAL_ERROR.value)))
+            self.write(
+                jsons.dumps(
+                    CheckerResultMessage(result=CheckerTaskResult.INTERNAL_ERROR, message=stacktrace),
+                    use_enum_name=False,
+                    key_transformer=jsons.KEY_TRANSFORMER_CAMELCASE,
+                )
+            )
 
 
 def create_app(checker: BaseChecker, mongo_url: str = "mongodb://mongodb:27017") -> None:
